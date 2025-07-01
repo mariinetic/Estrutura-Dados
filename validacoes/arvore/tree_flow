@@ -1,0 +1,161 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct No {
+    int pontuacao;
+    char jogadora[50];
+    struct No* esquerda;
+    struct No* direita;
+} No;
+
+// Cria um novo nó
+No* criarNo(int pontuacao, const char* jogadora) {
+    No* novo = malloc(sizeof(No));
+    novo->pontuacao = pontuacao;
+    strcpy(novo->jogadora, jogadora);
+    novo->esquerda = NULL;
+    novo->direita = NULL;
+    return novo;
+}
+
+// Insere um nó na árvore(Validado)
+No* inserir(No* raiz, int pontuacao, const char* jogadora) {
+    if (raiz == NULL) return criarNo(pontuacao, jogadora);
+    if (pontuacao < raiz->pontuacao)
+        raiz->esquerda = inserir(raiz->esquerda, pontuacao, jogadora);
+    else
+        raiz->direita = inserir(raiz->direita, pontuacao, jogadora);
+    return raiz;
+}
+
+// Encontra o nó com a menor pontuação em uma subárvore
+No* minimo(No* raiz) {
+    while (raiz->esquerda != NULL)
+        raiz = raiz->esquerda;
+    return raiz;
+}
+
+// Remove um nó da árvore
+No* remover(No* raiz, int pontuacao) {
+    if (raiz == NULL) return NULL;
+
+    if (pontuacao < raiz->pontuacao) {
+        raiz->esquerda = remover(raiz->esquerda, pontuacao);
+    } else if (pontuacao > raiz->pontuacao) {
+        raiz->direita = remover(raiz->direita, pontuacao);
+    } else {
+        // Caso 1: sem filho esquerdo
+        if (raiz->esquerda == NULL) {
+            No* temp = raiz->direita;
+            free(raiz);
+            return temp;
+        }
+        // Caso 2: sem filho direito
+        else if (raiz->direita == NULL) {
+            No* temp = raiz->esquerda;
+            free(raiz);
+            return temp;
+        }
+        // Caso 3: dois filhos
+        else {
+            No* temp = minimo(raiz->direita);
+            raiz->pontuacao = temp->pontuacao;
+            strcpy(raiz->jogadora, temp->jogadora);
+            raiz->direita = remover(raiz->direita, temp->pontuacao);
+        }
+    }
+    return raiz;
+}
+
+No* removerRaiz(No* raiz) {
+    if (raiz == NULL) return NULL;
+
+    if (raiz->esquerda == NULL) {
+        No* novaRaiz = raiz->direita;
+        free(raiz);
+        return novaRaiz;
+    }
+
+    if (raiz->direita == NULL) {
+        No* novaRaiz = raiz->esquerda;
+        free(raiz);
+        return novaRaiz;
+    }
+
+    // Caso com dois filhos: usa minimo() para encontrar sucessor
+    No* sucessor = minimo(raiz->direita);
+    raiz->pontuacao = sucessor->pontuacao;
+    strcpy(raiz->jogadora, sucessor->jogadora);
+
+    // Remove o sucessor da subárvore direita
+    raiz->direita = remover(raiz->direita, sucessor->pontuacao);
+
+    return raiz;
+}
+
+
+// Busca uma pontuação na árvore
+No* buscarPontuacao(No* raiz, int pontuacao) {
+    if (raiz == NULL) {
+        printf("Pontuação %d não encontrada na árvore.\n", pontuacao);
+        return NULL;
+    }
+
+    if (pontuacao == raiz->pontuacao) {
+        printf("A pontuação %d pertence à jogadora: %s\n", pontuacao, raiz->jogadora);
+        return raiz;
+    }
+
+    if (pontuacao > raiz->pontuacao)
+        return buscarPontuacao(raiz->direita, pontuacao);
+    else
+        return buscarPontuacao(raiz->esquerda, pontuacao);
+}
+
+// Mostra a árvore em ordem decrescente
+void mostrar(No* raiz) {
+    if (raiz != NULL) {
+        mostrar(raiz->direita);
+        printf("%s - %d pontos\n", raiz->jogadora, raiz->pontuacao);
+        mostrar(raiz->esquerda);
+    }
+}
+
+// Libera a memória da árvore
+void liberarArvore(No* raiz) {
+    if (raiz != NULL) {
+        liberarArvore(raiz->esquerda);
+        liberarArvore(raiz->direita);
+        free(raiz);
+    }
+}
+
+int main() {
+    No* raiz = NULL;
+
+    raiz = inserir(raiz, 500, "Emy");
+    raiz = inserir(raiz, 450, "Flora");
+    raiz = inserir(raiz, 400, "Jú");
+    raiz = inserir(raiz, 350, "Lari");
+    raiz = inserir(raiz, 300, "Lidi");
+    raiz = inserir(raiz, 250, "Mari");
+    raiz = inserir(raiz, 200, "Vick");
+
+    printf("Ranking antes da remoção:\n");
+    mostrar(raiz);
+
+    raiz = remover(raiz, 400);
+
+    printf("\nRanking após remover pontuação 400:\n");
+    mostrar(raiz);
+
+    printf("\nBuscando pontuação 350:\n");
+    buscarPontuacao(raiz, 350);
+
+    printf("\nBuscando pontuação 999:\n");
+    buscarPontuacao(raiz, 999);
+
+    liberarArvore(raiz);
+    return 0;
+}
