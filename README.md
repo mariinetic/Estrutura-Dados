@@ -14,7 +14,10 @@ Este repositório contém implementações simples e didáticas das principais e
   - Fila com cabeça
   - Fila sem cabeça
 
-- **Outras estruturas (em breve)**
+- **Arvore Binária de Busca**
+  - Inserir
+  - Percorrer
+  - Remover
 
 ## 🛠️ Tecnologias
 
